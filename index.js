@@ -60,17 +60,18 @@ module.exports = {
         var keyPrefix = this.readConfig('keyPrefix');
         var self = this;
 
-        return Promise.all(files.map(function(fileName) {
+        return files.reduce(function(currentPromise, fileName) {
           var filePath = path.join(distDir, fileName);
           self.log('Uploading `' + filePath + '`', { verbose: true });
 
-          return self._readFileContents(filePath)
+          return currentPromise
+            .then(self._readFileContents.bind(self, filePath))
             .then(zkDeployClient.upload.bind(zkDeployClient, keyPrefix, revisionKey, fileName))
             .then(self._uploadSuccessMessage.bind(self))
             .then(function(key) {
               return { zkKey: key }
             }).catch(self._errorMessage.bind(self));
-        }));
+        }, Promise.resolve());
       },
 
       willActivate: function() {
