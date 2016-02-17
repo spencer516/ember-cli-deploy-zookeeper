@@ -10,7 +10,7 @@ var stubProject = {
   }
 };
 
-describe('zookeeper plugin', function() {
+describe('zookeeper index', function() {
   var subject, mockUi;
 
   beforeEach(function() {
@@ -456,7 +456,8 @@ describe('zookeeper plugin', function() {
         project: stubProject,
         config: {
           zookeeper: { }
-        }
+        },
+        _zkLib: FakeZookeeper
       };
 
       plugin.beforeHook(context);
