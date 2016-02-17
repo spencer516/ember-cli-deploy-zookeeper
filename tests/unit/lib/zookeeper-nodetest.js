@@ -57,10 +57,6 @@ describe('zookeeper plugin', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
 
       var promise = zk.upload('key', 'index.html', 'value');
-      promise.catch(function(err) {
-        console.log('ERROR', err);
-        console.log(err.stack);
-      });
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok(zk._client.client._hash['/key/revisions/default']);
