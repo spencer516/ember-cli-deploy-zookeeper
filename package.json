@@ -11,7 +11,10 @@
     "start": "ember server",
     "test": "node tests/runner.js"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RavelLaw/ember-cli-deploy-zookeeper.git"
+  },
   "engines": {
     "node": ">= 0.10.0"
   },
