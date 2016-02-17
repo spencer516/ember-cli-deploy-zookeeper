@@ -48,6 +48,7 @@ module.exports = CoreObject.extend({
     if (!this.isConnected) {
       return this._notConnectedErr();
     }
+
     if (!this._parentPathExists(path)) {
       return this._nodeDoesNotExist(path);
     } else if (path in this._hash) {
@@ -58,7 +59,7 @@ module.exports = CoreObject.extend({
     } else {
       this._hash[path] = data;
       return new Promise(function(resolve) {
-        setTimeout(resolve, { stat: {} }, 5);
+        setTimeout(resolve, { stat: {} }, 100);
       });
     }
   },
