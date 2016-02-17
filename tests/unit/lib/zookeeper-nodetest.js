@@ -28,7 +28,7 @@ describe('zookeeper plugin', function() {
       var promise = zk.upload('key', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
-          assert.ok('/key/default/index.html' in zk._client._hash);
+          assert.ok('/key/default/index.html' in zk._client.client._hash);
         });
     });
 
@@ -42,7 +42,7 @@ describe('zookeeper plugin', function() {
       var promise = zk.upload('key', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
-          assert.ok('/key/default/index.html' in zk._client._hash);
+          assert.ok('/key/default/index.html' in zk._client.client._hash);
         });
     });
 
@@ -63,13 +63,13 @@ describe('zookeeper plugin', function() {
       });
       return assert.isFulfilled(promise)
         .then(function() {
-          assert.ok(zk._client._hash['/key/revisions/default']);
+          assert.ok(zk._client.client._hash['/key/revisions/default']);
         });
     });
 
     it('trims the list of recent uploads and removes the index key', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key/1/index.html': '<html></html>',
         '/key/1/robots.txt': '',
         '/key/revisions/1': 1,
@@ -87,7 +87,7 @@ describe('zookeeper plugin', function() {
       var promise = zk.upload('key', '11', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
-          var hash = zk._client._hash;
+          var hash = zk._client.client._hash;
           assert.equal(Object.keys(hash).filter(function(key) {
             return key.indexOf('revisions') > -1;
           }).length, 10);
@@ -100,7 +100,7 @@ describe('zookeeper plugin', function() {
 
     it('trims the list of recent uploads and leaves the active one', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key': '1',
         '/key/1/index.html': '<html></html>',
         '/key/1/robots.txt': '',
@@ -119,7 +119,7 @@ describe('zookeeper plugin', function() {
       var promise = zk.upload('key', '11', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
-          var hash = zk._client._hash;
+          var hash = zk._client.client._hash;
           assert.equal(Object.keys(hash).filter(function(key) {
             return key.indexOf('revisions') > -1;
           }).length, 11);
@@ -137,8 +137,8 @@ describe('zookeeper plugin', function() {
         var promise = zk.upload('key', 'index.html', 'value');
         return assert.isFulfilled(promise)
           .then(function() {
-            assert.ok('/key/default/index.html' in zk._client._hash);
-            assert.ok('/key/revisions/default' in zk._client._hash);
+            assert.ok('/key/default/index.html' in zk._client.client._hash);
+            assert.ok('/key/revisions/default' in zk._client.client._hash);
           });
       });
 
@@ -148,8 +148,8 @@ describe('zookeeper plugin', function() {
         var promise = zk.upload('key', 'everyonelovesdogs', 'index.html', 'value');
         return assert.isFulfilled(promise)
           .then(function() {
-            assert.ok('/key/everyonelovesdogs/index.html' in zk._client._hash);
-            assert.ok('/key/revisions/everyonelovesdogs' in zk._client._hash);
+            assert.ok('/key/everyonelovesdogs/index.html' in zk._client.client._hash);
+            assert.ok('/key/revisions/everyonelovesdogs' in zk._client.client._hash);
           });
       });
     });
@@ -158,7 +158,7 @@ describe('zookeeper plugin', function() {
   describe('#willActivate', function() {
     it('sets the previous revision to the current revision', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key': '1'
       };
 
@@ -173,7 +173,7 @@ describe('zookeeper plugin', function() {
   describe('#activate', function() {
     it('rejects if the revision does not exist in the list of uploaded revisions', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key': '1',
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,
@@ -189,7 +189,7 @@ describe('zookeeper plugin', function() {
 
     it('resolves and sets the current revision to the revision key provided', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key': '1',
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,
@@ -207,7 +207,7 @@ describe('zookeeper plugin', function() {
   describe('#fetchRevisions', function() {
     it('lists the last existing revisions', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,
         '/key/revisions/3': 3
@@ -235,7 +235,7 @@ describe('zookeeper plugin', function() {
 
     it('lists the last existing revisions and marks the active one', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
-      zk._client._hash = {
+      zk._client.client._hash = {
         '/key': '2',
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,

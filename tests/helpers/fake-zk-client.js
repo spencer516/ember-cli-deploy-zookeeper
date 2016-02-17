@@ -5,11 +5,16 @@ module.exports = CoreObject.extend({
   init: function(options) {
     this._hash = {};
     this.options = options;
+    this.isConnected = false;
   },
   connect: function() {
+    this.isConnected = true;
     return Promise.resolve();
   },
   get: function(path) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     var hash = this._hash;
     return Promise.resolve({
       stat: { path: path },
@@ -17,12 +22,18 @@ module.exports = CoreObject.extend({
     });
   },
   exists: function(path) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     var hash = this._hash;
     return Promise.resolve({
       stat: path in hash ? {} : null
     });
   },
   set: function(path, data) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     var hash = this._hash;
     if (!this._parentPathExists(path) || !path in hash) {
       return this._nodeDoesNotExist(path);
@@ -34,6 +45,9 @@ module.exports = CoreObject.extend({
     }
   },
   create: function(path, data) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     if (!this._parentPathExists(path)) {
       return this._nodeDoesNotExist(path);
     } else {
@@ -44,6 +58,9 @@ module.exports = CoreObject.extend({
     }
   },
   delete: function(path) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     var childKeys = Object.keys(this._hash).filter(function(key) {
       return key.indexOf(path) !== 0;
     });
@@ -56,9 +73,15 @@ module.exports = CoreObject.extend({
     return Promise.resolve();
   },
   close: function() {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     return Promise.resolve();
   },
   getChildren: function(path) {
+    if (!this.isConnected) {
+      return this._notConnectedErr();
+    }
     var keys = Object.keys(this._hash);
 
     var reg = new RegExp('^'+path+'/([^\/]+)');
@@ -70,6 +93,11 @@ module.exports = CoreObject.extend({
           return b;
         });
       })
+    });
+  },
+  _notConnectedErr: function() {
+    return Promise.reject({
+      message: 'Not connected to Zookeeper'
     });
   },
   _nodeDoesNotExist: function(path) {

@@ -46,6 +46,12 @@ module.exports = {
 
       requiredConfig: ['host', 'port', 'files', 'distDir', 'keyPrefix', 'revisionKey', 'didDeployMessage', 'zookeeperDeployClient'],
 
+      willDeploy: function(/* context */) {
+        var zkDeployClient = this.readConfig('zookeeperDeployClient');
+        var keyPrefix = this.readConfig('keyPrefix');
+        return zkDeployClient.willDeploy(keyPrefix);
+      },
+
       upload: function(/* context */) {
         var zkDeployClient = this.readConfig('zookeeperDeployClient');
         var revisionKey = this.readConfig('revisionKey');
