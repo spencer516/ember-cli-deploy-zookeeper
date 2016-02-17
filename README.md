@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/ember-cli-deploy-zookeeper.svg)](https://badge.fury.io/js/ember-cli-deploy-zookeeper)
+
 # ember-cli-deploy-zookeeper
 
 > An ember-cli-deploy plugin to upload index.html (and other required files) to a Zookeeper database
