@@ -6,7 +6,7 @@
 **WARNING: This plugin is only compatible with ember-cli-deploy versions >= 0.5.0**
 <hr/>
 
-This plugin uploads files, presumably just index.html, to your Zookeeper databse at a provided path. 
+This plugin uploads files, presumably just index.html, to your Zookeeper databse at a provided path.
 
 More often than not this plugin will be used in conjunction with the [lightning method of deployment][1] where the ember application assets will be served from S3 and the index.html file will be served from Zookeepr. However, it can be used to upload any file to Zookeeper.
 
@@ -31,8 +31,8 @@ $ ember install ember-cli-deploy-zookeeper
 
 ```javascript
 ENV.zookeeper = {
-  host: '<your-redis-host>',
-  port: <your-redis-port>
+  host: '<your-zookeeper-host>',
+  port: <your-zookeeper-port>
 }
 ```
 
@@ -46,7 +46,7 @@ $ ember deploy
 Run the following command in your terminal:
 
 ```bash
-ember install ember-cli-deploy-redis
+ember install ember-cli-deploy-zookeeper
 ```
 
 ## ember-cli-deploy Hooks Implemented
@@ -65,7 +65,7 @@ For detailed information on how configuration of plugins works, please refer to 
 
 ### host
 
-The Zookeeper host. 
+The Zookeeper host.
 
 *Default*: `'localhost'`
 
@@ -77,7 +77,7 @@ The Zookeeper port.
 
 ### files
 
-The files that should be uploaded to Zookeeper. 
+The files that should be uploaded to Zookeeper.
 
 ### distDir
 
@@ -103,7 +103,7 @@ A flag to specify whether the revision should be overwritten if it already exist
 
 *Default:* `false`
 
-### redisDeployClient
+### zookeeperDeployClient
 
 The Zookeeper client to be used to upload files to the Zookeeper store. By default this option will use a new instance of the Zookeeper client. This allows for injection of a mock client for testing purposes.
 
@@ -184,7 +184,7 @@ Activation occurs during the `activate` hook of the pipeline. By default, activa
 
 ## What if my Zookeeper server isn't publicly accessible?
 
-Not to worry! Actually, worry. Yes. No solution in place for that *yet*. 
+Not to worry! Actually, worry. Yes. No solution in place for that *yet*.
 
 ## Prerequisites
 
