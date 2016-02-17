@@ -33,16 +33,16 @@ describe('zookeeper plugin', function() {
     });
 
     it('uploads the contents if the key already exists but allowOverwrite is true', function() {
-      var fileUploaded = false;
-      var nodeCreated = false;
-      var zk = new Zookeeper({
-        allowOverwrite: true
-      }, FakeZookeeper);
+      var zk = new Zookeeper({}, FakeZookeeper);
 
-      var promise = zk.upload('key', 'index.html', 'value');
+      assert.ok(!('/key' in zk._client.client._hash));
+      assert.ok(!('/key/revisions' in zk._client.client._hash));
+
+      var promise = zk.willDeploy('key');
       return assert.isFulfilled(promise)
         .then(function() {
-          assert.ok('/key/default/index.html' in zk._client.client._hash);
+          assert.ok('/key' in zk._client.client._hash);
+          assert.ok('/key/revisions' in zk._client.client._hash);
         });
     });
 
@@ -148,6 +148,14 @@ describe('zookeeper plugin', function() {
             assert.ok('/key/revisions/everyonelovesdogs' in zk._client.client._hash);
           });
       });
+    });
+  });
+
+  describe('#willDeploy', function() {
+    it('creates the required missing paths before deploy', function() {
+      var zk = new Zookeeper({
+        allowOverwrite: true
+      }, FakeZookeeper);
     });
   });
 

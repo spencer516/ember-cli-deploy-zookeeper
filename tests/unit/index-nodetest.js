@@ -435,6 +435,41 @@ describe('zookeeper plugin', function() {
     });
   });
 
+  describe('willDeploy hook', function() {
+    it('prints a message for the validation of required zookeeper paths', function() {
+      var messageOutput = '';
+      var plugin = subject.createDeployPlugin({
+        name: 'zookeeper'
+      });
+
+      var context = {
+        deployTarget: 'qa',
+        ui: {
+          write: function(message) {
+            messageOutput = messageOutput + message;
+          },
+          writeLine: function(message){
+            messageOutput = messageOutput + message + '\n';
+          }
+        },
+        project: stubProject,
+        config: {
+          zookeeper: { }
+        },
+        revisionData: {
+          revisionKey: '123abc',
+        }
+      };
+
+      plugin.beforeHook(context);
+      plugin.configure(context);
+      return assert.isFulfilled(plugin.willDeploy(context))
+        .then(function() {
+          assert.match(messageOutput, /Validating presence of required paths for/);
+        });
+    });
+  });
+
   describe('didDeploy hook', function() {
     it('prints default message about lack of activation when revision has not been activated', function() {
       var messageOutput = '';
