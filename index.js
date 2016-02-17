@@ -59,6 +59,7 @@ module.exports = {
         var files = this.readConfig('files');
         var keyPrefix = this.readConfig('keyPrefix');
         var self = this;
+        var uploadedKeys = [];
 
         return files.reduce(function(currentPromise, fileName) {
           var filePath = path.join(distDir, fileName);
@@ -69,9 +70,11 @@ module.exports = {
             .then(zkDeployClient.upload.bind(zkDeployClient, keyPrefix, revisionKey, fileName))
             .then(self._uploadSuccessMessage.bind(self))
             .then(function(key) {
-              return { zkKey: key }
+              uploadedKeys.push({ zkKey: key });
             }).catch(self._errorMessage.bind(self));
-        }, Promise.resolve());
+        }, Promise.resolve()).then(function() {
+          return uploadedKeys;
+        });
       },
 
       willActivate: function() {
