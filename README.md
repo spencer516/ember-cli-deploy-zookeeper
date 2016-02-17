@@ -1,4 +1,5 @@
 [![npm version](https://badge.fury.io/js/ember-cli-deploy-zookeeper.svg)](https://badge.fury.io/js/ember-cli-deploy-zookeeper)
+[![Build Status](https://travis-ci.org/RavelLaw/ember-cli-deploy-zookeeper.svg?branch=master)](https://travis-ci.org/RavelLaw/ember-cli-deploy-zookeeper)
 
 # ember-cli-deploy-zookeeper
 
