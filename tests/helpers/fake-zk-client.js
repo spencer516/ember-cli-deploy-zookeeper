@@ -50,10 +50,15 @@ module.exports = CoreObject.extend({
     }
     if (!this._parentPathExists(path)) {
       return this._nodeDoesNotExist(path);
+    } else if (path in this._hash) {
+      return Promise.reject({
+        path: path,
+        message: 'Node already exists'
+      });
     } else {
       this._hash[path] = data;
-      return Promise.resolve({
-        stat: {}
+      return new Promise(function(resolve) {
+        setTimeout(resolve, { stat: {} }, 5);
       });
     }
   },

@@ -294,7 +294,7 @@ describe('zookeeper plugin', function() {
         config: {
           zookeeper: {
             keyPrefix: 'test-prefix',
-            files: ['index.html', 'robots.txt'],
+            files: ['index.html', 'robots.txt', 'random.css'],
             distDir: 'tests/upload-files',
             revisionKey: 'evenbeforewegottoten'
           }
@@ -309,7 +309,8 @@ describe('zookeeper plugin', function() {
         .then(function(result) {
           assert.deepEqual(result, [
             { zkKey: '/test-prefix/evenbeforewegottoten/index.html' },
-            { zkKey: '/test-prefix/evenbeforewegottoten/robots.txt' }
+            { zkKey: '/test-prefix/evenbeforewegottoten/robots.txt' },
+            { zkKey: '/test-prefix/evenbeforewegottoten/random.css' }
           ]);
         });
     });
@@ -455,9 +456,6 @@ describe('zookeeper plugin', function() {
         project: stubProject,
         config: {
           zookeeper: { }
-        },
-        revisionData: {
-          revisionKey: '123abc',
         }
       };
 

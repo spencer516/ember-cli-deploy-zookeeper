@@ -60,22 +60,19 @@ module.exports = {
         var files = this.readConfig('files');
         var keyPrefix = this.readConfig('keyPrefix');
         var self = this;
-        var uploadedKeys = [];
 
-        return files.reduce(function(currentPromise, fileName) {
+        return Promise.all(files.map(function(fileName) {
           var filePath = path.join(distDir, fileName);
           self.log('Uploading `' + filePath + '`', { verbose: true });
 
-          return currentPromise
+          return Promise.resolve()
             .then(self._readFileContents.bind(self, filePath))
             .then(zkDeployClient.upload.bind(zkDeployClient, keyPrefix, revisionKey, fileName))
             .then(self._uploadSuccessMessage.bind(self))
             .then(function(key) {
-              uploadedKeys.push({ zkKey: key });
+              return { zkKey: key };
             }).catch(self._errorMessage.bind(self));
-        }, Promise.resolve()).then(function() {
-          return uploadedKeys;
-        });
+        }));
       },
 
       willActivate: function() {

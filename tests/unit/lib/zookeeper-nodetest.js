@@ -11,7 +11,7 @@ describe('zookeeper plugin', function() {
   });
 
   describe('#upload', function() {
-    it('rejects if the key already exists in redis', function() {
+    it('rejects if the key already exists in zookeeper', function() {
       var zk = new Zookeeper({}, FakeZookeeper.extend({
         exists: function() {
           return Promise.resolve({ stat: {} });
@@ -29,6 +29,21 @@ describe('zookeeper plugin', function() {
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key/default/index.html' in zk._client.client._hash);
+        });
+    });
+
+    it('does not support creating a node if it already exists', function() {
+      var zk = new Zookeeper({}, FakeZookeeper);
+      zk.testCreatingNodeTwice = function(key) {
+        var client = this._client;
+        return client.create(key, '').then(function() {
+          return client.create(key, '');
+        });
+      };
+
+      return assert.isRejected(zk.testCreatingNodeTwice('/key'))
+        .then(function(err) {
+          assert.equal(err.message, 'Node already exists');
         });
     });
 
@@ -153,9 +168,7 @@ describe('zookeeper plugin', function() {
 
   describe('#willDeploy', function() {
     it('creates the required missing paths before deploy', function() {
-      var zk = new Zookeeper({
-        allowOverwrite: true
-      }, FakeZookeeper);
+      var zk = new Zookeeper({}, FakeZookeeper);
     });
   });
 
