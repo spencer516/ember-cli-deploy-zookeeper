@@ -75,7 +75,9 @@ module.exports = CoreObject.extend({
       return Promise.reject('ZNOTEMPTY: The node has children.');
     }
 
-    delete this._hash[path];
+    if (path in this._hash) {
+      delete this._hash[path];
+    }
     return Promise.resolve();
   },
   close: function() {
