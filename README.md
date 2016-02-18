@@ -66,21 +66,17 @@ For detailed information on what plugin hooks are and how they work, please refe
 
 For detailed information on how configuration of plugins works, please refer to the [Plugin Documentation][2].
 
-### host
+### connect
 
-The Zookeeper host.
+The Zookeeper host. This may be a comma separated string of hosts/ports.
 
-*Default*: `'localhost'`
-
-### port
-
-The Zookeeper port.
-
-*Default:* `2181`
+*Default*: `'localhost:2181'`
 
 ### files
 
-The files that should be uploaded to Zookeeper.
+The files in the `distDir` that should be uploaded to Zookeeper.
+
+*Default*: ['index.html']
 
 ### distDir
 
