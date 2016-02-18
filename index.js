@@ -16,8 +16,7 @@ module.exports = {
       name: options.name,
 
       defaultConfig: {
-        host: 'localhost',
-        port: 2181,
+        connect: 'localhost:2181',
         files: ['index.html'],
         connectionTimeout: 2000,
         distDir: function(context) {
@@ -45,7 +44,7 @@ module.exports = {
         }
       },
 
-      requiredConfig: ['host', 'port', 'files', 'distDir', 'keyPrefix', 'revisionKey', 'didDeployMessage', 'zookeeperDeployClient'],
+      requiredConfig: ['connect', 'files', 'distDir', 'keyPrefix', 'revisionKey', 'didDeployMessage', 'zookeeperDeployClient'],
 
       willDeploy: function(/* context */) {
         var zkDeployClient = this.readConfig('zookeeperDeployClient');
