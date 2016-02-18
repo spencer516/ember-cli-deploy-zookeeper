@@ -236,9 +236,9 @@ describe('zookeeper plugin', function() {
     it('lists the last existing revisions', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
       zk._client.client._hash = {
-        '/key/revisions/1': 1,
-        '/key/revisions/2': 2,
-        '/key/revisions/3': 3
+        '/key/revisions/1': '1',
+        '/key/revisions/2': '2',
+        '/key/revisions/3': '3'
       };
 
       var promise = zk.fetchRevisions('key');
@@ -247,15 +247,18 @@ describe('zookeeper plugin', function() {
           assert.deepEqual(result, [
             {
               revision: '1',
-              active: false
+              active: false,
+              timestamp: 1
             },
             {
               revision: '2',
-              active: false
+              active: false,
+              timestamp: 2
             },
             {
               revision: '3',
-              active: false
+              active: false,
+              timestamp: 3
             }
           ]);
         });
@@ -265,9 +268,9 @@ describe('zookeeper plugin', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
       zk._client.client._hash = {
         '/key': '2',
-        '/key/revisions/1': 1,
-        '/key/revisions/2': 2,
-        '/key/revisions/3': 3
+        '/key/revisions/1': '1',
+        '/key/revisions/2': '2',
+        '/key/revisions/3': '3'
       };
 
       var promise = zk.fetchRevisions('key');
@@ -276,15 +279,18 @@ describe('zookeeper plugin', function() {
           assert.deepEqual(result, [
             {
               revision: '1',
-              active: false
+              active: false,
+              timestamp: 1
             },
             {
               revision: '2',
-              active: true
+              active: true,
+              timestamp: 2
             },
             {
               revision: '3',
-              active: false
+              active: false,
+              timestamp: 3
             }
           ]);
         });
