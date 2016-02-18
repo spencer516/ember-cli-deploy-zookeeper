@@ -199,13 +199,12 @@ describe('zookeeper index', function() {
           return previous;
         }, []);
 
-        assert.equal(messages.length, 9);
+        assert.equal(messages.length, 8);
       });
 
       it('adds default config to the config object', function() {
         plugin.configure(context);
-        assert.isDefined(config.zookeeper.host);
-        assert.isDefined(config.zookeeper.port);
+        assert.isDefined(config.zookeeper.connect);
         assert.isDefined(config.zookeeper.keyPrefix);
         assert.isDefined(config.zookeeper.didDeployMessage);
         assert.isDefined(config.zookeeper.connectionTimeout);
@@ -239,12 +238,11 @@ describe('zookeeper index', function() {
 
           return previous;
         }, []);
-        assert.equal(messages.length, 8);
+        assert.equal(messages.length, 7);
       });
       it('does not add default config to the config object', function() {
         plugin.configure(context);
-        assert.isDefined(config.zookeeper.host);
-        assert.isDefined(config.zookeeper.port);
+        assert.isDefined(config.zookeeper.connect);
         assert.isDefined(config.zookeeper.files);
         assert.isDefined(config.zookeeper.didDeployMessage);
         assert.equal(config.zookeeper.keyPrefix, 'project');
