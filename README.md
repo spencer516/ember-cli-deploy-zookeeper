@@ -127,6 +127,12 @@ if (context.revisionData.revisionKey && !context.revisionData.activatedRevisionK
 }
 ```
 
+### connectionTimeout
+
+Unofortunately, the underlying Zookeeper Library does not signal when the attempt to connect has resulted in an error. Instead, the library will continue to try to reconnect indefinitely. This will cancel attempts to connect after a given period of time.
+
+*Default:* 2000
+
 ## Activation
 
 As well as uploading a file to Zookeeper, *ember-cli-deploy-zookeeper* has the ability to mark a revision of a deployed file as `current`. This is most commonly used in the [lightning method of deployment][1] whereby an index.html file is pushed to Zookeeper and then served to the user by a web server. The web server could be configured to return any existing revision of the index.html file as requested by a query parameter. However, the revision marked as the currently `active` revision would be returned if no query paramter is present. For more detailed information on this method of deployment please refer to the [ember-cli-deploy-lightning-pack README][1].
