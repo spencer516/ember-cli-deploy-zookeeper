@@ -99,6 +99,7 @@ describe('zookeeper plugin', function() {
       return assert.isFulfilled(promise)
         .then(function() {
           var hash = zk._client.client._hash;
+          console.log(hash);
           assert.equal(Object.keys(hash).filter(function(key) {
             return key.indexOf('revisions') > -1;
           }).length, 10);
