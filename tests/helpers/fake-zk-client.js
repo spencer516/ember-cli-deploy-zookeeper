@@ -59,7 +59,7 @@ module.exports = CoreObject.extend({
     } else {
       this._hash[path] = data;
       return new Promise(function(resolve) {
-        setTimeout(resolve, { stat: {} }, 10);
+        setTimeout(resolve, 1, { stat: {} });
       });
     }
   },

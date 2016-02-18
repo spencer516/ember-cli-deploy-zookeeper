@@ -19,6 +19,7 @@ module.exports = {
         host: 'localhost',
         port: 2181,
         files: ['index.html'],
+        connectionTimeout: 2000,
         distDir: function(context) {
           return context.distDir;
         },
