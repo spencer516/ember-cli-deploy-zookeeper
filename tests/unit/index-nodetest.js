@@ -551,4 +551,15 @@ describe('zookeeper index', function() {
         });
     });
   });
+
+  it('reads file contents properly', function() {
+    var result = subject.createDeployPlugin({
+      name: 'test-plugin'
+    });
+
+    return result._readFileContents('./tests/upload-files/robots.txt').then(function(data) {
+      assert.match(data, /Robot bleep bloop\./);
+    });
+  });
 });
+
