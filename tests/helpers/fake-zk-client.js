@@ -84,6 +84,8 @@ module.exports = CoreObject.extend({
     if (!this.isConnected) {
       return this._notConnectedErr();
     }
+
+    this.isConnected = false;
     return Promise.resolve();
   },
   getChildren: function(path) {
