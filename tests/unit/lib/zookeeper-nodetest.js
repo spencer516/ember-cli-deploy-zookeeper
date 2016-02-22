@@ -26,9 +26,11 @@ describe('zookeeper plugin', function() {
       var zk = new Zookeeper({}, FakeZookeeper);
 
       var promise = zk.upload('key', 'index.html', 'value');
+
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key/default/index.html' in zk._client.client._hash);
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
 
@@ -58,6 +60,7 @@ describe('zookeeper plugin', function() {
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key/default/index.html' in zk._client.client._hash);
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
 
@@ -179,6 +182,7 @@ describe('zookeeper plugin', function() {
         .then(function() {
           assert.ok('/key' in zk._client.client._hash);
           assert.ok('/key/revisions' in zk._client.client._hash);
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
   });
@@ -194,6 +198,7 @@ describe('zookeeper plugin', function() {
       return assert.isFulfilled(promise)
         .then(function(revision) {
           assert.equal(revision, '1');
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
   });
@@ -212,6 +217,7 @@ describe('zookeeper plugin', function() {
       return assert.isRejected(promise)
         .then(function(error) {
           assert.equal(error, '`notme` is not a valid revision key');
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
 
@@ -228,6 +234,7 @@ describe('zookeeper plugin', function() {
       return assert.isFulfilled(promise)
         .then(function(activatedKey) {
           assert.equal(activatedKey, '2');
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
         });
     });
   });
@@ -244,6 +251,7 @@ describe('zookeeper plugin', function() {
       var promise = zk.fetchRevisions('key');
       return assert.isFulfilled(promise)
         .then(function(result) {
+          assert.ok(!zk._client.connection); // Make sure the connection is closed afterwards
           assert.deepEqual(result, [
             {
               revision: '1',

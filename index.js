@@ -50,6 +50,7 @@ module.exports = {
         var zkDeployClient = this.readConfig('zookeeperDeployClient');
         var keyPrefix = this.readConfig('keyPrefix');
         this.log('Validating presence of required paths for `' + keyPrefix + '`');
+
         return zkDeployClient.willDeploy(keyPrefix);
       },
 

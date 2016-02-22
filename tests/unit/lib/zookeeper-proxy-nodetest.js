@@ -170,7 +170,7 @@ describe('zookeeper proxy: connection errors', function() {
       connectionTimeout: 5
     }, stub);
 
-    return proxy.connection.catch(function(err) {
+    return proxy.connect().catch(function(err) {
       assert.equal(err, 'Connection to Zookeeper timed out');
       assert.ok(closeWasCalled);
     });
