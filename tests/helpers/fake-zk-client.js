@@ -67,7 +67,7 @@ module.exports = CoreObject.extend({
     }.bind(this), 'a_set');
   },
 
-  a_create(path, data, flags, cb) {
+  a_create: function(path, data, flags, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
