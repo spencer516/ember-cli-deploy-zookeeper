@@ -1,5 +1,6 @@
 var CoreObject = require('core-object');
-var Promise    = require('ember-cli/lib/ext/promise');
+var Promise = require('ember-cli/lib/ext/promise');
+var ZKError = require('../../lib/zookeeper-error');
 
 module.exports = CoreObject.extend({
   init: function(options) {
@@ -7,112 +8,129 @@ module.exports = CoreObject.extend({
     this.options = options;
     this.isConnected = false;
   },
-  connect: function() {
+
+  connect: function(cb) {
     this.isConnected = true;
-    return Promise.resolve();
+    return next(function() {
+      cb();
+    }.bind(this), 'connecting');
   },
-  get: function(path) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
-    var hash = this._hash;
-    return Promise.resolve({
-      stat: { path: path },
-      data: hash[path]
-    });
-  },
-  exists: function(path) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
-    var hash = this._hash;
-    return Promise.resolve({
-      stat: path in hash ? {} : null
-    });
-  },
-  set: function(path, data) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
-    var hash = this._hash;
-    if (!this._parentPathExists(path) || !path in hash) {
-      return this._nodeDoesNotExist(path);
-    } else {
-      hash[path] = data;
-      return Promise.resolve({
-        stat: {}
-      });
-    }
-  },
-  create: function(path, data) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
 
-    if (!this._parentPathExists(path)) {
-      return this._nodeDoesNotExist(path);
-    } else if (path in this._hash) {
-      return Promise.reject({
-        path: path,
-        message: 'Node already exists'
-      });
-    } else {
-      this._hash[path] = data;
-      return new Promise(function(resolve) {
-        setTimeout(resolve, 1, { stat: {} });
-      });
-    }
-  },
-  delete: function(path) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
-    var childKeys = Object.keys(this._hash).filter(function(key) {
-      return key.indexOf(path) !== 0;
-    });
-
-    if (childKeys > 1) {
-      return Promise.reject('ZNOTEMPTY: The node has children.');
-    }
-
-    if (path in this._hash) {
-      delete this._hash[path];
-    }
-    return Promise.resolve();
-  },
   close: function() {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
+    if (this.closeCb) {
+      this.closeCb();
     }
-    return Promise.resolve();
+    this.isConnected = false;
+    return;
   },
-  getChildren: function(path) {
-    if (!this.isConnected) {
-      return this._notConnectedErr();
-    }
-    var keys = Object.keys(this._hash);
 
-    var reg = new RegExp('^'+path+'/([^\/]+)');
-    return Promise.resolve({
-      children: keys.filter(function(key) {
+  a_get: function(path, watch, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      var hash = this._hash;
+      return cb(0, null, { path: path }, hash[path]);
+    }.bind(this), 'a_get');
+  },
+
+  on: function(key, cb) {
+    this._closeCb = cb;
+  },
+
+  a_exists: function(path, watch, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      var hash = this._hash;
+      var value = path in hash ? {} : null;
+      return cb(0, null, value);
+    }.bind(this), 'a_exists');
+  },
+
+  a_set: function(path, data, version, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      var hash = this._hash;
+      if (!this._parentPathExists(path) || !path in hash) {
+        return this._nodeDoesNotExist(path, cb);
+      } else {
+        hash[path] = data;
+        cb(0, null, { path: path });
+      }
+    }.bind(this), 'a_set');
+  },
+
+  a_create(path, data, flags, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      if (!this._parentPathExists(path)) {
+        return this._nodeDoesNotExist(cb, path);
+      } else if (path in this._hash) {
+        return cb(ZKError.ZNODEEXISTS, 'The node already exists');
+      } else {
+        this._hash[path] = data;
+        return cb(0, null, path);
+      }
+    }.bind(this), 'a_create');
+  },
+
+  a_delete_: function(path, version, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      var childKeys = Object.keys(this._hash).filter(function(key) {
+        return key.indexOf(path) !== 0;
+      });
+
+      if (childKeys > 1) {
+        return cb(ZKError.ZNOTEMPTY, 'The node has children.');
+      }
+
+      if (path in this._hash) {
+        delete this._hash[path];
+      }
+
+      return cb(0, null);
+    }.bind(this), 'a_delete_');
+  },
+
+  a_get_children: function(path, watch, cb) {
+    return next(function() {
+      if (!this.isConnected) {
+        return this._notConnectedErr(cb);
+      }
+
+      var keys = Object.keys(this._hash);
+      var reg = new RegExp('^'+path+'/([^\/]+)');
+      var children = keys.filter(function(key) {
         return reg.test(key);
       }).map(function(key) {
         return key.replace(reg, function(a, b) {
           return b;
         });
-      })
-    });
+      });
+
+      return cb(0, null, children);
+    }.bind(this), 'a_get_children');
   },
-  _notConnectedErr: function() {
-    return Promise.reject({
-      message: 'Not connected to Zookeeper'
-    });
+
+  _notConnectedErr: function(cb) {
+    cb(0, 'Not connected to Zookeeper');
   },
-  _nodeDoesNotExist: function(path) {
-    return Promise.reject({
-      path: path,
-      message: 'Node does not exist'
-    });
+  _nodeDoesNotExist: function(cb, path) {
+    cb(ZKError.ZNONODE, 'Node does not exist');
   },
   _parentPathExists: function(path) {
     var parts = path.split('/');
@@ -133,3 +151,9 @@ module.exports = CoreObject.extend({
     return result.length > 0;
   }
 });
+
+// Make sure this happens on the next tick.
+function next(cb, name) {
+  setTimeout(cb, 0);
+  return 0;
+}

@@ -1,5 +1,6 @@
 'use strict';
 var FakeZookeeper = require('../../helpers/fake-zk-client');
+var ZKError = require('../../../lib/zookeeper-error');
 var Promise = require('ember-cli/lib/ext/promise');
 var assert  = require('ember-cli/tests/helpers/assert');
 
@@ -13,22 +14,29 @@ describe('zookeeper plugin', function() {
   describe('#upload', function() {
     it('rejects if the key already exists in zookeeper', function() {
       var zk = new Zookeeper({}, FakeZookeeper.extend({
-        exists: function() {
-          return Promise.resolve({ stat: {} });
+        a_exists: function(path, watch, cb) {
+          cb(ZKError.ZNODEEXISTS, 'Value already exists for key: ' + path);
+          return 0;
         }
       }));
 
       var promise = zk.upload('key', 'index.html', 'value');
-      return assert.isRejected(promise, /^Value already exists for key: \/key\/default\/index.html$/);
+      return assert.isRejected(promise, /^The node already exists/);
     });
 
-    it('uploads the contents if the key does not already exist', function() {
-      var zk = new Zookeeper({}, FakeZookeeper);
+    it.only('uploads the contents if the key does not already exist', function() {
+      var hash;
+      var zk = new Zookeeper({}, FakeZookeeper.extend({
+        init: function() {
+          this._super.apply(this, arguments);
+          hash = this._hash;
+        }
+      }));
 
       var promise = zk.upload('key', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
-          assert.ok('/key/default/index.html' in zk._client.client._hash);
+          assert.ok('/key/default/index.html' in hash);
         });
     });
 

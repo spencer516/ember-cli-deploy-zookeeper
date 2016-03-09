@@ -152,27 +152,3 @@ describe('zookeeper proxy', function() {
     });
   });
 });
-
-describe('zookeeper proxy: connection errors', function() {
-  it('closes connections with error after specified timeout', function() {
-    var closeWasCalled = false;
-    var stub = ClientStub.extend({
-      connect: function() {
-        // A never resolving promise.
-        return new Promise(function() {});
-      },
-      close: function() {
-        closeWasCalled = true;
-        return Promise.resolve('close');
-      }
-    });
-    var proxy = new ZookeeperProxy({
-      connectionTimeout: 5
-    }, stub);
-
-    return proxy.connection.catch(function(err) {
-      assert.equal(err, 'Connection to Zookeeper timed out');
-      assert.ok(closeWasCalled);
-    });
-  });
-});
