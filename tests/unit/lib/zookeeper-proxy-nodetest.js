@@ -17,7 +17,7 @@ var ClientStub = CoreObject.extend({
   a_create: function(p, d, f, cb) { cb(0, null, 'create'); }
 });
 
-describe('zookeeper proxy and zookeeper-promised', function() {
+describe('zookeeper proxy', function() {
   var proxy;
   beforeEach(function() {
     proxy = new ZookeeperProxy({}, ClientStub);
