@@ -52,8 +52,9 @@
     "core-object": "^1.1.0",
     "ember-cli-babel": "^5.1.5",
     "ember-cli-deploy-plugin": "^0.2.0",
+    "lodash": "^4.6.1",
     "rsvp": "^3.2.1",
-    "zk": "^1.0.3"
+    "zookeeper": "^3.4.7-2"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"

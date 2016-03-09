@@ -10,7 +10,7 @@ var stubProject = {
   }
 };
 
-describe('zookeeper index', function() {
+describe('ember-cli-deploy-zookeeper', function() {
   var subject, mockUi;
 
   beforeEach(function() {
