@@ -65,32 +65,39 @@ describe('zookeeper proxy', function() {
     });
   });
 
+  describe('#createIfNotExists', function() {
+    it('creates paths if they do not already exist', function() {
+      var numberOfCreates = 0;
+      var numberOfExistChecks = 0;
+      proxy = new ZookeeperProxy({}, ClientStub.extend({
+        a_create: function(path, d, f, cb) {
+          numberOfCreates++;
+          cb(0, null, 'create');
+        },
+        a_exists: function(path, d, cb) {
+          numberOfExistChecks++;
+          if (numberOfCreates === 0) {
+            cb(0, null, null);
+          } else {
+            cb(0, null, {});
+          }
+        }
+      }));
+
+      return assert.isFulfilled(proxy.createIfNotExists('/test').then(function() {
+        return proxy.createIfNotExists('/test');
+      })).then(function() {
+        assert.equal(numberOfCreates, 1);
+        assert.equal(numberOfExistChecks, 2);
+      });
+    });
+  });
+
   describe('#set', function() {
     it('proxies', function() {
       return assert.isFulfilled(proxy.set('key', 'value'))
         .then(function(res) {
           assert.equal(res.stat, 'set');
-        });
-    });
-
-    it('does a create operation for empty paths but does not set value if none provided', function() {
-      var createdPath;
-      var setWasCalled = false;
-      proxy = new ZookeeperProxy({}, ClientStub.extend({
-        a_create: function(path, data, flags, cb) {
-          createdPath = path;
-          cb(0, null, 'create');
-        },
-        a_set: function(p, d, v, cb) {
-          setWasCalled = true;
-          cb(0, null, 'set');
-        }
-      }));
-
-      return assert.isFulfilled(proxy.set('/test'))
-        .then(function() {
-          assert.equal(createdPath, '/test');
-          assert.ok(!setWasCalled);
         });
     });
 
