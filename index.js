@@ -63,7 +63,10 @@ module.exports = {
 
         return Promise.all(files.map(function(fileName) {
           var filePath = path.join(distDir, fileName);
-          self.log('Uploading `' + filePath + '`', { verbose: true });
+          self.log(
+            'Uploading `' + filePath + '` to `/' + keyPrefix + '/' + revisionKey + '/' + fileName + '`',
+            { verbose: true }
+          );
 
           return Promise.resolve()
             .then(self._readFileContents.bind(self, filePath))
