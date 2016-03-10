@@ -60,22 +60,20 @@ module.exports = {
         var files = this.readConfig('files');
         var keyPrefix = this.readConfig('keyPrefix');
         var self = this;
+        var paths = [];
 
-        return Promise.all(files.map(function(fileName) {
-          var filePath = path.join(distDir, fileName);
-          self.log(
-            'Uploading `' + filePath + '` to `/' + keyPrefix + '/' + revisionKey + '/' + fileName + '`',
-            { verbose: true }
-          );
-
-          return Promise.resolve()
-            .then(self._readFileContents.bind(self, filePath))
-            .then(zkDeployClient.upload.bind(zkDeployClient, keyPrefix, revisionKey, fileName))
-            .then(self._uploadSuccessMessage.bind(self))
-            .then(function(key) {
-              return { zkKey: key };
-            }).catch(self._errorMessage.bind(self));
-        }));
+        return files.reduce(function(promise, fileName) {
+            return promise
+              .then(self._uploadFile.bind(self, zkDeployClient, distDir, fileName, keyPrefix, revisionKey))
+              .then(function(key) {
+                return paths.push({ zkKey: key });
+              });
+          }, Promise.resolve())
+          .then(zkDeployClient.trimRecentUploads.bind(zkDeployClient, keyPrefix, revisionKey))
+          .then(function() {
+            return paths;
+          })
+          .catch(self._errorMessage.bind(self));
       },
 
       willActivate: function() {
@@ -128,6 +126,19 @@ module.exports = {
             return { revisions: revisions };
           })
           .catch(this._errorMessage.bind(this));
+      },
+
+      _uploadFile: function(zkDeployClient, distDir, fileName, keyPrefix, revisionKey) {
+        var filePath = path.join(distDir, fileName);
+        this.log(
+          'Uploading `' + filePath + '` to `/' + keyPrefix + '/' + revisionKey + '/' + fileName + '`',
+          { verbose: true }
+        );
+
+        return Promise.resolve()
+          .then(this._readFileContents.bind(this, filePath))
+          .then(zkDeployClient.upload.bind(zkDeployClient, keyPrefix, revisionKey, fileName))
+          .then(this._uploadSuccessMessage.bind(this));
       },
 
       _readFileContents: function(path) {

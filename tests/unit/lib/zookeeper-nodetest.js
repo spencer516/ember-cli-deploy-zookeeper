@@ -112,7 +112,9 @@ describe('zookeeper plugin', function() {
         }
       }));
 
-      var promise = zk.upload('key', 'index.html', 'value');
+      var promise = zk.upload('key', 'index.html', 'value').then(function() {
+        return zk.trimRecentUploads('key');
+      });
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok(hash['/key/revisions/default']);
@@ -142,7 +144,9 @@ describe('zookeeper plugin', function() {
         }
       }));
 
-      var promise = zk.upload('key', '11', 'index.html', 'value');
+      var promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
+        return zk.trimRecentUploads('key', '11');
+      });
       return assert.isFulfilled(promise)
         .then(function() {
           assert.equal(Object.keys(hash).filter(function(key) {
@@ -179,7 +183,9 @@ describe('zookeeper plugin', function() {
         }
       }));
 
-      var promise = zk.upload('key', '11', 'index.html', 'value');
+      var promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
+        return zk.trimRecentUploads('key', '11');
+      });
       return assert.isFulfilled(promise)
         .then(function() {
           assert.equal(hash['/key'], '1');
@@ -203,7 +209,9 @@ describe('zookeeper plugin', function() {
           }
         }));
 
-        var promise = zk.upload('key', 'index.html', 'value');
+        var promise = zk.upload('key', 'index.html', 'value').then(function() {
+          return zk.trimRecentUploads('key');
+        });
         return assert.isFulfilled(promise)
           .then(function() {
             assert.ok('/key/default/index.html' in hash);
@@ -220,7 +228,9 @@ describe('zookeeper plugin', function() {
           }
         }));
 
-        var promise = zk.upload('key', 'everyonelovesdogs', 'index.html', 'value');
+        var promise = zk.upload('key', 'everyonelovesdogs', 'index.html', 'value').then(function() {
+          return zk.trimRecentUploads('key', 'everyonelovesdogs');
+        });
         return assert.isFulfilled(promise)
           .then(function() {
             assert.ok('/key/everyonelovesdogs/index.html' in hash);
