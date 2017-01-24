@@ -2,7 +2,7 @@
 var FakeZookeeper = require('../../helpers/fake-zk-client');
 var ZKError = require('../../../lib/zookeeper-error');
 var ZooKeeperPromised = require('../../../lib/zookeeper-promised');
-var assert  = require('ember-cli/tests/helpers/assert');
+var assert  = require('../../helpers/assert');
 
 describe('zookeeper promised', function() {
   function makePromised(fakerOverrides, opts) {
