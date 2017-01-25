@@ -4,6 +4,7 @@ var ZKError = require('../../lib/zookeeper-error');
 
 module.exports = CoreObject.extend({
   init: function(options) {
+    this._super();
     this._hash = {};
     this.options = options;
     this.isConnected = false;

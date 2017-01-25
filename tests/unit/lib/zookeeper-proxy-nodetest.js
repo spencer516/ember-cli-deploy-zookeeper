@@ -1,11 +1,13 @@
 'use strict';
 var ZookeeperProxy = require('../../../lib/zookeeper-proxy');
 var Promise = require('ember-cli/lib/ext/promise');
-var assert  = require('ember-cli/tests/helpers/assert');
+var assert  = require('../../helpers/assert');
 var CoreObject = require('core-object');
 
 var ClientStub = CoreObject.extend({
-  init: function() { },
+  init: function() {
+    this._super();
+  },
   on: function() { },
   connect: function(cb) { cb(); },
   a_get: function(p, w, cb) { cb(0, null, null, 'get'); },

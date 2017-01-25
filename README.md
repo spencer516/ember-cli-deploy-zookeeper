@@ -1,5 +1,6 @@
 [![npm version](https://badge.fury.io/js/ember-cli-deploy-zookeeper.svg)](https://badge.fury.io/js/ember-cli-deploy-zookeeper)
 [![Build Status](https://travis-ci.org/RavelLaw/ember-cli-deploy-zookeeper.svg?branch=master)](https://travis-ci.org/RavelLaw/ember-cli-deploy-zookeeper)
+[![](https://ember-cli-deploy.github.io/ember-cli-deploy-version-badges/plugins/ember-cli-deploy-s3.svg)](http://ember-cli-deploy.github.io/ember-cli-deploy-version-badges/)
 
 # ember-cli-deploy-zookeeper
 
@@ -186,10 +187,6 @@ $ zkCli
 ### When does activation occur?
 
 Activation occurs during the `activate` hook of the pipeline. By default, activation is turned off and must be explicitly enabled by one of the 3 methods above.
-
-## What if my Zookeeper server isn't publicly accessible?
-
-Not to worry! Actually, worry. Yes. No solution in place for that *yet*.
 
 ## Prerequisites
 

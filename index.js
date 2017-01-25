@@ -38,7 +38,7 @@ module.exports = {
           return context.commandOptions.revision || (context.revisionData && context.revisionData.revisionKey);
         },
         zookeeperDeployClient: function(context) {
-          var zkOptions = this.pluginConfig;
+          var zkOptions = this;
           var zkLib = context._zkLib;
           return new Zookeeper(zkOptions, zkLib);
         }
