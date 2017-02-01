@@ -1,8 +1,8 @@
 'use strict';
-var FakeZookeeper = require('../../helpers/fake-zk-client');
-var ZKError = require('../../../lib/zookeeper-error');
-var ZooKeeperPromised = require('../../../lib/zookeeper-promised');
-var assert  = require('../../helpers/assert');
+const FakeZookeeper = require('../../helpers/fake-zk-client');
+const ZKError = require('../../../lib/zookeeper-error');
+const ZooKeeperPromised = require('../../../lib/zookeeper-promised');
+const assert  = require('../../helpers/assert');
 
 describe('zookeeper promised', function() {
   function makePromised(fakerOverrides, opts) {
@@ -10,15 +10,15 @@ describe('zookeeper promised', function() {
   }
 
   it('#init', function() {
-    var promised = makePromised({ _testProp: true }, { yay: 1234 });
+    let promised = makePromised({ _testProp: true }, { yay: 1234 });
     assert.ok(promised);
-    assert.ok(promised.zkLib.prototype._testProp);
+    assert.ok(promised.zkLib.createClient()._testProp);
     assert.deepEqual(promised.options, { yay: 1234 });
   });
 
   describe('#establishConnection/#connect/#close', function() {
     it('establishes a connection property', function() {
-      var promised = makePromised();
+      let promised = makePromised();
 
       assert.ok(!promised.connection);
       promised.establishConnection();
@@ -26,97 +26,21 @@ describe('zookeeper promised', function() {
     });
 
     it('only connects once if there is a successful connection', function() {
-      var instances = [];
-      var promised = makePromised({
-        init: function() {
+      let instances = [];
+      let promised = makePromised({
+        init() {
           this._super.apply(this, arguments);
           instances.push(this);
         }
-      });
-
-      return promised.connect().then(function() {
-        assert.equal(instances.length, 1);
-        return promised.connect();
-      }).then(function() {
-        assert.equal(instances.length, 1);
-      });
-    });
-
-    it('will create a new connection if the existing one fails/closes', function() {
-      var instances = [];
-      var closeCb;
-      var promised = makePromised({
-        init: function() {
-          this._super.apply(this, arguments);
-          instances.push(this);
-        },
-        on: function(type, cb) {
-          closeCb = cb;
-        }
-      });
-
-      return promised.connect().then(function() {
-        assert.equal(instances.length, 1);
-        closeCb(); // Send a close signal.
-        return promised.connect()
-      }).then(function() {
-        assert.equal(instances.length, 2);
-      });
-    });
-
-    it('will create a new connection if the existing one is manually closed', function() {
-      var instances = [];
-      var promised = makePromised({
-        init: function() {
-          this._super.apply(this, arguments);
-          instances.push(this);
-        }
-      });
-
-      return promised.connect().then(function() {
-        assert.equal(instances.length, 1);
-        return promised.close();
-      }).then(function() {
-        return promised.connect()
-      }).then(function() {
-        assert.equal(instances.length, 2);
-      });
-    });
-
-    it('will reject the connection if does not connect within connectionTimeout', function() {
-      var promised = makePromised({
-        connect: function() { /* Never connect. */ }
       }, {
         connectionTimeout: 1
       });
 
-      return assert.isRejected(promised.connect(), /Timed out trying to connect to ZooKeeper/);
-    });
-
-    it('will reject the connection on an error', function() {
-      var promised = makePromised({
-        connect: function(cb) { cb('Connection error'); }
-      });
-
-      return assert.isRejected(promised.connect(), /Connection error/);
-    });
-
-    // This is the behavior now; but could change. Maybe a Number of retries policy? *shrug*
-    it('does not try to reconnect on a connection failure', function() {
-      var instances = [];
-      var promised = makePromised({
-        connect: function(cb) { cb('Connection error'); },
-        init: function() {
-          this._super.apply(this, arguments);
-          instances.push(this);
-        }
-      });
-
       return promised.connect().catch(function(err) {
-        assert.equal(err, 'Connection error');
+        assert.equal(err, 'Timed out trying to connect to ZooKeeper');
         return promised.connect();
       }).catch(function(err) {
-        assert.equal(err, 'Connection error');
+        assert.equal(err, 'Timed out trying to connect to ZooKeeper');
         assert.equal(instances.length, 1);
       });
     });
@@ -124,9 +48,9 @@ describe('zookeeper promised', function() {
 
   describe('#get', function() {
     it('gets values', function() {
-      var promised = makePromised({
-        a_get: function(path, w, cb) {
-          cb(0, null, {}, 'howdy');
+      let promised = makePromised({
+        getData(path, cb) {
+          cb(null, 'howdy', {});
         }
       });
 
@@ -137,9 +61,9 @@ describe('zookeeper promised', function() {
     });
 
     it('rejects on errors', function() {
-      var promised = makePromised({
-        a_get: function(path, w, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        getData(path, cb) {
+          cb('System error');
         }
       });
 
@@ -149,9 +73,9 @@ describe('zookeeper promised', function() {
 
   describe('#exists', function() {
     it('has stat if exists', function() {
-      var promised = makePromised({
-        a_exists: function(path, w, cb) {
-          cb(0, null, {});
+      let promised = makePromised({
+        exists(path, cb) {
+          cb(null, {});
         }
       });
 
@@ -162,9 +86,9 @@ describe('zookeeper promised', function() {
     });
 
     it('has no stat if not exists', function() {
-      var promised = makePromised({
-        a_exists: function(path, w, cb) {
-          cb(0, null, null);
+      let promised = makePromised({
+        exists(path, cb) {
+          cb(null, null);
         }
       });
 
@@ -175,34 +99,23 @@ describe('zookeeper promised', function() {
     });
 
     it('handles errors', function() {
-      var promised = makePromised({
-        a_exists: function(path, w, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        exists(path, cb) {
+          cb('System error');
         }
       });
 
       return assert.isRejected(promised.exists('/test'), /System error/);
     });
-
-    it('handles ZNONODE error as falsey', function() {
-      var promised = makePromised({
-        a_exists: function(path, w, cb) {
-          cb(ZKError.ZNONODE);
-        }
-      });
-
-      return assert.isFulfilled(promised.exists('/test'))
-        .then(function(res) {
-          assert.ok(!res.stat);
-        });
-    });
   });
 
   describe('#set', function() {
     it('sets values', function() {
-      var promised = makePromised({
-        a_set: function(p, d, v, cb) {
-          cb(0, null, {});
+      let promised = makePromised({
+        setData(p, d, cb) {
+          assert.equal(d.toString('utf8'), '/hi');
+          assert.ok(d instanceof Uint8Array);
+          cb(null, {});
         }
       });
 
@@ -210,9 +123,9 @@ describe('zookeeper promised', function() {
     });
 
     it('handles errors', function() {
-      var promised = makePromised({
-        a_set: function(p, d, v, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        setData(p, d, cb) {
+          cb('System error');
         }
       });
 
@@ -222,19 +135,29 @@ describe('zookeeper promised', function() {
 
   describe('#create', function() {
     it('creates values', function() {
-      var promised = makePromised({
-        a_create: function(p, d, v, cb) {
-          cb(0, null, p);
+      let promised = makePromised({
+        create(p, d, cb) {
+          cb(null, p);
         }
       });
 
       return assert.isFulfilled(promised.create('/test', '/hi'));
     });
 
+    it('creates values with no data passed', function() {
+      let promised = makePromised({
+        create(p, cb) {
+          cb(null, p);
+        }
+      });
+
+      return assert.isFulfilled(promised.create('/test'));
+    });
+
     it('handles errors', function() {
-      var promised = makePromised({
-        a_create: function(p, d, v, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        create(p, cb) {
+          cb('System error');
         }
       });
 
@@ -244,9 +167,9 @@ describe('zookeeper promised', function() {
 
   describe('#delete', function() {
     it('deletes values', function() {
-      var promised = makePromised({
-        a_delete_: function(p, d, cb) {
-          cb(0, null);
+      let promised = makePromised({
+        remove(p, v, cb) {
+          cb(null);
         }
       });
 
@@ -254,9 +177,9 @@ describe('zookeeper promised', function() {
     });
 
     it('handles errors', function() {
-      var promised = makePromised({
-        a_delete_: function(p, d, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        remove(p, v, cb) {
+          cb('System error');
         }
       });
 
@@ -266,9 +189,9 @@ describe('zookeeper promised', function() {
 
   describe('#getChildren', function() {
     it('getChildrens values', function() {
-      var promised = makePromised({
-        a_get_children: function(p, d, cb) {
-          cb(0, null, ['1', '2', '3']);
+      let promised = makePromised({
+        getChildren(p, cb) {
+          cb(null, ['1', '2', '3']);
         }
       });
 
@@ -281,25 +204,13 @@ describe('zookeeper promised', function() {
     });
 
     it('handles errors', function() {
-      var promised = makePromised({
-        a_get_children: function(p, d, cb) {
-          cb(ZKError.ZSYSTEMERROR);
+      let promised = makePromised({
+        getChildren(p, cb) {
+          cb('System error');
         }
       });
 
       return assert.isRejected(promised.getChildren('/test'), /System error/);
-    });
-  });
-
-  describe('#_promisify', function() {
-    it('it will auto reject an action if returns error sync', function() {
-      var promised = makePromised({
-        a_get: function() {
-          return ZKError.ZSYSTEMERROR;
-        }
-      });
-
-      return assert.isRejected(promised.get('/hi'), /System error/);
     });
   });
 });

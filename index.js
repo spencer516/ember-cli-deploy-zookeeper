@@ -1,18 +1,18 @@
 /* jshint node: true */
 'use strict';
-var DeployPluginBase = require('ember-cli-deploy-plugin');
-var path = require('path');
-var fs = require('fs');
-var Promise = require('ember-cli/lib/ext/promise');
-var denodeify = require('rsvp').denodeify;
-var readFile  = denodeify(fs.readFile);
+let DeployPluginBase = require('ember-cli-deploy-plugin');
+let path = require('path');
+let fs = require('fs');
+let Promise = require('ember-cli/lib/ext/promise');
+let denodeify = require('rsvp').denodeify;
+let readFile  = denodeify(fs.readFile);
 
 module.exports = {
   name: 'ember-cli-deploy-zookeeper',
   createDeployPlugin: function(options) {
-    var Zookeeper = require('./lib/zookeeper');
+    let Zookeeper = require('./lib/zookeeper');
 
-    var DeployPlugin = DeployPluginBase.extend({
+    let DeployPlugin = DeployPluginBase.extend({
       name: options.name,
 
       defaultConfig: {
@@ -26,8 +26,8 @@ module.exports = {
           return context.project.name();
         },
         didDeployMessage: function(context){
-          var revisionKey = context.revisionData && context.revisionData.revisionKey;
-          var activatedRevisionKey = context.revisionData && context.revisionData.activatedRevisionKey;
+          let revisionKey = context.revisionData && context.revisionData.revisionKey;
+          let activatedRevisionKey = context.revisionData && context.revisionData.activatedRevisionKey;
           if (revisionKey && !activatedRevisionKey) {
             return "Deployed but did not activate revision " + revisionKey + ". "
                  + "To activate, run: "
@@ -38,8 +38,8 @@ module.exports = {
           return context.commandOptions.revision || (context.revisionData && context.revisionData.revisionKey);
         },
         zookeeperDeployClient: function(context) {
-          var zkOptions = this;
-          var zkLib = context._zkLib;
+          let zkOptions = this;
+          let zkLib = context._zkLib;
           return new Zookeeper(zkOptions, zkLib);
         }
       },
@@ -47,20 +47,20 @@ module.exports = {
       requiredConfig: ['connect', 'files', 'distDir', 'keyPrefix', 'revisionKey', 'didDeployMessage', 'zookeeperDeployClient'],
 
       willDeploy: function(/* context */) {
-        var zkDeployClient = this.readConfig('zookeeperDeployClient');
-        var keyPrefix = this.readConfig('keyPrefix');
+        let zkDeployClient = this.readConfig('zookeeperDeployClient');
+        let keyPrefix = this.readConfig('keyPrefix');
         this.log('Validating presence of required paths for `' + keyPrefix + '`');
         return zkDeployClient.willDeploy(keyPrefix);
       },
 
       upload: function(/* context */) {
-        var zkDeployClient = this.readConfig('zookeeperDeployClient');
-        var revisionKey = this.readConfig('revisionKey');
-        var distDir = this.readConfig('distDir');
-        var files = this.readConfig('files');
-        var keyPrefix = this.readConfig('keyPrefix');
-        var self = this;
-        var paths = [];
+        let zkDeployClient = this.readConfig('zookeeperDeployClient');
+        let revisionKey = this.readConfig('revisionKey');
+        let distDir = this.readConfig('distDir');
+        let files = this.readConfig('files');
+        let keyPrefix = this.readConfig('keyPrefix');
+        let self = this;
+        let paths = [];
 
         return files.reduce(function(promise, fileName) {
             return promise
@@ -77,8 +77,8 @@ module.exports = {
       },
 
       willActivate: function() {
-        var zkDeployClient = this.readConfig('zookeeperDeployClient');
-        var keyPrefix = this.readConfig('keyPrefix');
+        let zkDeployClient = this.readConfig('zookeeperDeployClient');
+        let keyPrefix = this.readConfig('keyPrefix');
 
         return Promise.resolve(zkDeployClient.activeRevision(keyPrefix))
           .then(function(revisionKey) {
@@ -92,9 +92,9 @@ module.exports = {
       },
 
       activate: function() {
-        var zkDeployClient = this.readConfig('zookeeperDeployClient');
-        var revisionKey = this.readConfig('revisionKey');
-        var keyPrefix = this.readConfig('keyPrefix');
+        let zkDeployClient = this.readConfig('zookeeperDeployClient');
+        let revisionKey = this.readConfig('revisionKey');
+        let keyPrefix = this.readConfig('keyPrefix');
 
         this.log('Activating revision `' + revisionKey + '`', { verbose: true });
         return Promise.resolve(zkDeployClient.activate(keyPrefix, revisionKey))
@@ -110,15 +110,15 @@ module.exports = {
       },
 
       didDeploy: function(/* context */) {
-        var didDeployMessage = this.readConfig('didDeployMessage');
+        let didDeployMessage = this.readConfig('didDeployMessage');
         if (didDeployMessage) {
           this.log(didDeployMessage);
         }
       },
 
       fetchRevisions: function() {
-        var zkDeployClient = this.readConfig('zookeeperDeployClient');
-        var keyPrefix = this.readConfig('keyPrefix');
+        let zkDeployClient = this.readConfig('zookeeperDeployClient');
+        let keyPrefix = this.readConfig('keyPrefix');
 
         this.log('Listing revision for key: `' + keyPrefix + '`');
         return Promise.resolve(zkDeployClient.fetchRevisions(keyPrefix))
@@ -129,7 +129,7 @@ module.exports = {
       },
 
       _uploadFile: function(zkDeployClient, distDir, fileName, keyPrefix, revisionKey) {
-        var filePath = path.join(distDir, fileName);
+        let filePath = path.join(distDir, fileName);
         this.log(
           'Uploading `' + filePath + '` to `/' + keyPrefix + '/' + revisionKey + '/' + fileName + '`',
           { verbose: true }

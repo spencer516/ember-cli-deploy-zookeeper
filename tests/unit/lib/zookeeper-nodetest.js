@@ -1,11 +1,11 @@
 'use strict';
-var FakeZookeeper = require('../../helpers/fake-zk-client');
-var ZKError = require('../../../lib/zookeeper-error');
-var Promise = require('ember-cli/lib/ext/promise');
-var assert  = require('../../helpers/assert');
+let FakeZookeeper = require('../../helpers/fake-zk-client');
+let ZKError = require('../../../lib/zookeeper-error');
+let Promise = require('ember-cli/lib/ext/promise');
+let assert  = require('../../helpers/assert');
 
 describe('zookeeper plugin', function() {
-  var Zookeeper;
+  let Zookeeper;
 
   beforeEach(function() {
     Zookeeper = require('../../../lib/zookeeper');
@@ -13,27 +13,27 @@ describe('zookeeper plugin', function() {
 
   describe('#upload', function() {
     it('rejects if the key already exists in zookeeper', function() {
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
-        a_exists: function(path, watch, cb) {
-          cb(ZKError.ZNODEEXISTS, 'Value already exists for key: ' + path);
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
+        exists(path, cb) {
+          cb('Value already exists for key: ' + path);
           return 0;
         }
       }));
 
-      var promise = zk.upload('key', 'index.html', 'value');
-      return assert.isRejected(promise, /^The node already exists/);
+      let promise = zk.upload('key', 'index.html', 'value');
+      return assert.isRejected(promise, /^Value already exists for ke/);
     });
 
     it('uploads the contents if the key does not already exist', function() {
-      var hash;
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let hash;
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           hash = this._hash;
         }
       }));
 
-      var promise = zk.upload('key', 'index.html', 'value');
+      let promise = zk.upload('key', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key/default/index.html' in hash);
@@ -41,9 +41,9 @@ describe('zookeeper plugin', function() {
     });
 
     it('does not support creating a node if it already exists', function() {
-      var zk = new Zookeeper({}, FakeZookeeper);
+      let zk = new Zookeeper({}, FakeZookeeper);
       zk.testCreatingNodeTwice = function(key) {
-        var client = this._client;
+        let client = this._client;
         return client.create(key, '').then(function() {
           return client.create(key, '');
         });
@@ -51,15 +51,15 @@ describe('zookeeper plugin', function() {
 
       return assert.isRejected(zk.testCreatingNodeTwice('/key'))
         .then(function(err) {
-          assert.equal(err.message, 'The node already exists');
+          assert.equal(err.toString(), 'The node already exists');
         });
     });
 
     it('uploads the contents if the key already exists but allowOverwrite is true', function() {
-      var fileUploaded = false;
-      var nodeCreated = false;
-      var hash;
-      var zk = new Zookeeper({
+      let fileUploaded = false;
+      let nodeCreated = false;
+      let hash;
+      let zk = new Zookeeper({
         allowOverwrite: true
       }, FakeZookeeper.extend({
         init: function() {
@@ -68,7 +68,7 @@ describe('zookeeper plugin', function() {
         }
       }));
 
-      var promise = zk.upload('key', 'index.html', 'value');
+      let promise = zk.upload('key', 'index.html', 'value');
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key/default/index.html' in hash);
@@ -76,21 +76,21 @@ describe('zookeeper plugin', function() {
     });
 
     it('can get the keys of its children', function() {
-      var hash = {
+      let hash = {
         '/key/1/index.html': 1,
         '/key/1/index2.html': 1,
         '/key/2/index3.html': 1,
         '/key/1/index4.html': 1
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk._client.getChildren('/key/1');
+      let promise = zk._client.getChildren('/key/1');
       return assert.isFulfilled(promise)
         .then(function(children) {
           assert.deepEqual(children, {
@@ -104,15 +104,15 @@ describe('zookeeper plugin', function() {
     });
 
     it('updates the list of recent uploads once upload is successful', function() {
-      var hash = {};
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let hash = {};
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.upload('key', 'index.html', 'value').then(function() {
+      let promise = zk.upload('key', 'index.html', 'value').then(function() {
         return zk.trimRecentUploads('key');
       });
       return assert.isFulfilled(promise)
@@ -122,7 +122,7 @@ describe('zookeeper plugin', function() {
     });
 
     it('trims the list of recent uploads and removes the index key', function() {
-      var hash = {
+      let hash = {
         '/key/1/index.html': '<html></html>',
         '/key/1/robots.txt': '',
         '/key/revisions/1': 1,
@@ -137,16 +137,17 @@ describe('zookeeper plugin', function() {
         '/key/revisions/10': 10
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
-        init: function() {
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
+        init() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
+      let promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
         return zk.trimRecentUploads('key', '11');
       });
+
       return assert.isFulfilled(promise)
         .then(function() {
           assert.equal(Object.keys(hash).filter(function(key) {
@@ -160,7 +161,7 @@ describe('zookeeper plugin', function() {
     });
 
     it('trims the list of recent uploads and leaves the active one', function() {
-      var hash = {
+      let hash = {
         '/key': '1',
         '/key/1/index.html': '<html></html>',
         '/key/1/robots.txt': '',
@@ -176,14 +177,14 @@ describe('zookeeper plugin', function() {
         '/key/revisions/10': 10
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
+      let promise = zk.upload('key', '11', 'index.html', 'value').then(function() {
         return zk.trimRecentUploads('key', '11');
       });
       return assert.isFulfilled(promise)
@@ -201,17 +202,18 @@ describe('zookeeper plugin', function() {
 
     describe('generating the zookeeper path', function() {
       it('will use default as the revision if the revision/tag is not provided', function() {
-        var hash = {};
-        var zk = new Zookeeper({}, FakeZookeeper.extend({
-          init: function() {
+        const hash = {};
+        const zk = new Zookeeper({}, FakeZookeeper.extend({
+          init() {
             this._super.apply(this, arguments);
             this._hash = hash;
           }
         }));
 
-        var promise = zk.upload('key', 'index.html', 'value').then(function() {
+        const promise = zk.upload('key', 'index.html', 'value').then(function() {
           return zk.trimRecentUploads('key');
         });
+
         return assert.isFulfilled(promise)
           .then(function() {
             assert.ok('/key/default/index.html' in hash);
@@ -220,15 +222,15 @@ describe('zookeeper plugin', function() {
       });
 
       it('will use the provided revision', function() {
-        var hash = {};
-        var zk = new Zookeeper({}, FakeZookeeper.extend({
+        let hash = {};
+        let zk = new Zookeeper({}, FakeZookeeper.extend({
           init: function() {
             this._super.apply(this, arguments);
             this._hash = hash;
           }
         }));
 
-        var promise = zk.upload('key', 'everyonelovesdogs', 'index.html', 'value').then(function() {
+        let promise = zk.upload('key', 'everyonelovesdogs', 'index.html', 'value').then(function() {
           return zk.trimRecentUploads('key', 'everyonelovesdogs');
         });
         return assert.isFulfilled(promise)
@@ -242,8 +244,8 @@ describe('zookeeper plugin', function() {
 
   describe('#willDeploy', function() {
     it('creates the required missing paths before deploy', function() {
-      var hash = {};
-        var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let hash = {};
+        let zk = new Zookeeper({}, FakeZookeeper.extend({
           init: function() {
             this._super.apply(this, arguments);
             this._hash = hash;
@@ -253,28 +255,50 @@ describe('zookeeper plugin', function() {
       assert.ok(!('/key' in hash));
       assert.ok(!('/key/revisions' in hash));
 
-      var promise = zk.willDeploy('key');
+      let promise = zk.willDeploy('key');
       return assert.isFulfilled(promise)
         .then(function() {
           assert.ok('/key' in hash);
           assert.ok('/key/revisions' in hash);
         });
     });
-  });
 
-  describe('#willActivate', function() {
-    it('sets the previous revision to the current revision', function() {
-      var hash = {
-        '/key': '1'
-      };
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+    it('creates the required missing nested paths before deploy', function() {
+      let hash = {};
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.activeRevision('key');
+      assert.ok(!('/nested' in hash));
+      assert.ok(!('/nested/key' in hash));
+      assert.ok(!('/nested/key/revisions' in hash));
+
+      let promise = zk.willDeploy('/nested/key');
+      return assert.isFulfilled(promise)
+        .then(function() {
+          assert.ok('/nested' in hash);
+          assert.ok('/nested/key' in hash);
+          assert.ok('/nested/key/revisions' in hash);
+        });
+    });
+  });
+
+  describe('#willActivate', function() {
+    it('sets the previous revision to the current revision', function() {
+      let hash = {
+        '/key': '1'
+      };
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
+        init: function() {
+          this._super.apply(this, arguments);
+          this._hash = hash;
+        }
+      }));
+
+      let promise = zk.activeRevision('key');
       return assert.isFulfilled(promise)
         .then(function(revision) {
           assert.equal(revision, '1');
@@ -284,21 +308,21 @@ describe('zookeeper plugin', function() {
 
   describe('#activate', function() {
     it('rejects if the revision does not exist in the list of uploaded revisions', function() {
-      var hash = {
+      let hash = {
         '/key': '1',
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,
         '/key/revisions/3': 3
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.activate('key', 'notme');
+      let promise = zk.activate('key', 'notme');
       return assert.isRejected(promise)
         .then(function(error) {
           assert.equal(error, '`notme` is not a valid revision key');
@@ -306,21 +330,21 @@ describe('zookeeper plugin', function() {
     });
 
     it('resolves and sets the current revision to the revision key provided', function() {
-      var hash = {
+      let hash = {
         '/key': '1',
         '/key/revisions/1': 1,
         '/key/revisions/2': 2,
         '/key/revisions/3': 3
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.activate('key', '2');
+      let promise = zk.activate('key', '2');
       return assert.isFulfilled(promise)
         .then(function(activatedKey) {
           assert.equal(activatedKey, '2');
@@ -330,20 +354,20 @@ describe('zookeeper plugin', function() {
 
   describe('#fetchRevisions', function() {
     it('lists the last existing revisions', function() {
-      var hash = {
+      let hash = {
         '/key/revisions/1': '1',
         '/key/revisions/2': '2',
         '/key/revisions/3': '3'
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.fetchRevisions('key');
+      let promise = zk.fetchRevisions('key');
       return assert.isFulfilled(promise)
         .then(function(result) {
           assert.deepEqual(result, [
@@ -367,21 +391,21 @@ describe('zookeeper plugin', function() {
     });
 
     it('lists the last existing revisions and marks the active one', function() {
-      var hash = {
+      let hash = {
         '/key': '2',
         '/key/revisions/1': '1',
         '/key/revisions/2': '2',
         '/key/revisions/3': '3'
       };
 
-      var zk = new Zookeeper({}, FakeZookeeper.extend({
+      let zk = new Zookeeper({}, FakeZookeeper.extend({
         init: function() {
           this._super.apply(this, arguments);
           this._hash = hash;
         }
       }));
 
-      var promise = zk.fetchRevisions('key');
+      let promise = zk.fetchRevisions('key');
       return assert.isFulfilled(promise)
         .then(function(result) {
           assert.deepEqual(result, [
