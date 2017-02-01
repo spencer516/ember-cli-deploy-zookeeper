@@ -1,23 +1,31 @@
-var CoreObject = require('core-object');
-var Promise = require('ember-cli/lib/ext/promise');
-var ZKError = require('../../lib/zookeeper-error');
+const CoreObject = require('core-object');
+const Promise = require('ember-cli/lib/ext/promise');
+const ZKError = require('../../lib/zookeeper-error');
+const Buffer = require('buffer').Buffer;
 
-module.exports = CoreObject.extend({
+const FakeZookeeperClient = CoreObject.extend({
   init: function(options) {
     this._super();
     this._hash = {};
+    this._callbacks = {};
     this.options = options;
     this.isConnected = false;
   },
 
-  connect: function(cb) {
+  once(event, callback) {
+    this._callbacks[event] = callback;
+  },
+
+  connect() {
+    const cb = this._callbacks.connected;
     this.isConnected = true;
+    
     return next(function() {
-      cb();
+      cb && cb();
     }.bind(this), 'connecting');
   },
 
-  close: function() {
+  close() {
     if (this.closeCb) {
       this.closeCb();
     }
@@ -25,50 +33,61 @@ module.exports = CoreObject.extend({
     return;
   },
 
-  a_get: function(path, watch, cb) {
+  getData(path, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
       }
 
-      var hash = this._hash;
-      return cb(0, null, { path: path }, hash[path]);
+      let hash = this._hash;
+      let data = hash[path];
+
+      if (data && !(data instanceof Uint16Array)) {
+        data = Buffer.from(data.toString());
+      }
+
+      return cb(null, data, { path: path });
     }.bind(this), 'a_get');
   },
 
-  on: function(key, cb) {
+  on(key, cb) {
     this._closeCb = cb;
   },
 
-  a_exists: function(path, watch, cb) {
+  exists(path, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
       }
 
-      var hash = this._hash;
-      var value = path in hash ? {} : null;
-      return cb(0, null, value);
+      let hash = this._hash;
+      let value = path in hash ? {} : null;
+      return cb(null, value);
     }.bind(this), 'a_exists');
   },
 
-  a_set: function(path, data, version, cb) {
+  setData(path, data, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
       }
 
-      var hash = this._hash;
+      let hash = this._hash;
       if (!this._parentPathExists(path) || !path in hash) {
         return this._nodeDoesNotExist(path, cb);
       } else {
         hash[path] = data;
-        cb(0, null, { path: path });
+        cb(null, { path: path });
       }
     }.bind(this), 'a_set');
   },
 
-  a_create: function(path, data, flags, cb) {
+  create(path, data, cb) {
+    if (!cb) {
+      cb = data;
+      data = null;
+    }
+
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
@@ -77,21 +96,21 @@ module.exports = CoreObject.extend({
       if (!this._parentPathExists(path)) {
         return this._nodeDoesNotExist(cb, path);
       } else if (path in this._hash) {
-        return cb(ZKError.ZNODEEXISTS, 'The node already exists');
+        return cb('The node already exists');
       } else {
         this._hash[path] = data;
-        return cb(0, null, path);
+        return cb(null, path);
       }
     }.bind(this), 'a_create');
   },
 
-  a_delete_: function(path, version, cb) {
+  remove(path, version, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
       }
 
-      var childKeys = Object.keys(this._hash).filter(function(key) {
+      let childKeys = Object.keys(this._hash).filter(function(key) {
         return key.indexOf(path) !== 0;
       });
 
@@ -103,19 +122,19 @@ module.exports = CoreObject.extend({
         delete this._hash[path];
       }
 
-      return cb(0, null);
+      return cb(null);
     }.bind(this), 'a_delete_');
   },
 
-  a_get_children: function(path, watch, cb) {
+  getChildren(path, cb) {
     return next(function() {
       if (!this.isConnected) {
         return this._notConnectedErr(cb);
       }
 
-      var keys = Object.keys(this._hash);
-      var reg = new RegExp('^'+path+'/([^\/]+)');
-      var children = keys.filter(function(key) {
+      let keys = Object.keys(this._hash);
+      let reg = new RegExp('^'+path+'/([^\/]+)');
+      let children = keys.filter(function(key) {
         return reg.test(key);
       }).map(function(key) {
         return key.replace(reg, function(a, b) {
@@ -123,19 +142,19 @@ module.exports = CoreObject.extend({
         });
       });
 
-      return cb(0, null, children);
+      return cb(null, children);
     }.bind(this), 'a_get_children');
   },
 
-  _notConnectedErr: function(cb) {
-    cb(0, 'Not connected to Zookeeper');
+  _notConnectedErr(cb) {
+    cb('Not connected to Zookeeper');
   },
-  _nodeDoesNotExist: function(cb, path) {
+  _nodeDoesNotExist(cb, path) {
     cb(ZKError.ZNONODE, 'Node does not exist');
   },
-  _parentPathExists: function(path) {
-    var parts = path.split('/');
-    var hash = this._hash;
+  _parentPathExists(path) {
+    let parts = path.split('/');
+    let hash = this._hash;
     // Remove the last part.
     parts.pop();
 
@@ -144,14 +163,28 @@ module.exports = CoreObject.extend({
       return true;
     }
 
-    var result = parts.filter(function(part, index) {
-      var key = parts.slice(0, index + 1).join('/');
+    let result = parts.filter(function(part, index) {
+      let key = parts.slice(0, index + 1).join('/');
       return key in hash;
     });
 
     return result.length > 0;
   }
 });
+
+module.exports = {
+  createClient(connectString, options) {
+    return new FakeZookeeperClient(options);
+  },
+  extend(overrides) {
+    const ClientClass = FakeZookeeperClient.extend(overrides);
+    return {
+      createClient(connectString, options) {
+        return new ClientClass(options);
+      }
+    }
+  }
+};
 
 // Make sure this happens on the next tick.
 function next(cb, name) {

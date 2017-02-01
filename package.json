@@ -38,8 +38,8 @@
     "ember-cli-babel": "^5.1.5",
     "ember-cli-deploy-plugin": "^0.2.9",
     "lodash": "^4.6.1",
-    "rsvp": "^3.2.1",
-    "zookeeper": "3.4.9-3"
+    "node-zookeeper-client": "^0.2.2",
+    "rsvp": "^3.2.1"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"

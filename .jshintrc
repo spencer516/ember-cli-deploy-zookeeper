@@ -19,7 +19,7 @@
   "noempty": false,
   "nonew": false,
   "nomen": false,
-  "onevar": false,
+  "onelet": false,
   "plusplus": false,
   "regexp": false,
   "undef": true,

@@ -1,17 +1,17 @@
 'use strict';
 
-var Promise = require('ember-cli/lib/ext/promise');
-var assert  = require('../helpers/assert');
-var FakeZookeeper = require('../helpers/fake-zk-client');
+let Promise = require('ember-cli/lib/ext/promise');
+let assert  = require('../helpers/assert');
+let FakeZookeeper = require('../helpers/fake-zk-client');
 
-var stubProject = {
+let stubProject = {
   name: function() {
     return 'my-project';
   }
 };
 
 describe('ember-cli-deploy-zookeeper', function() {
-  var subject, mockUi;
+  let subject, mockUi;
 
   beforeEach(function() {
     subject = require('../../index');
@@ -26,7 +26,7 @@ describe('ember-cli-deploy-zookeeper', function() {
   });
 
   it('has a name', function() {
-    var result = subject.createDeployPlugin({
+    let result = subject.createDeployPlugin({
       name: 'test-plugin'
     });
 
@@ -34,7 +34,7 @@ describe('ember-cli-deploy-zookeeper', function() {
   });
 
   it('implements the correct hooks', function() {
-    var plugin = subject.createDeployPlugin({
+    let plugin = subject.createDeployPlugin({
       name: 'test-plugin'
     });
     assert.ok(plugin.configure);
@@ -45,11 +45,11 @@ describe('ember-cli-deploy-zookeeper', function() {
 
   describe('configure hook', function() {
     it('runs without error if config is ok', function() {
-      var plugin = subject.createDeployPlugin({
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
 
-      var context = {
+      let context = {
         ui: mockUi,
         project: stubProject,
         config: {
@@ -66,11 +66,11 @@ describe('ember-cli-deploy-zookeeper', function() {
     });
 
     it('passes through config options', function() {
-      var plugin = subject.createDeployPlugin({
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
 
-      var context = {
+      let context = {
         ui: mockUi,
         project: stubProject,
         config: {
@@ -84,18 +84,18 @@ describe('ember-cli-deploy-zookeeper', function() {
 
       plugin.beforeHook(context);
       plugin.configure(context);
-      var zkClient = plugin.readConfig('zookeeperDeployClient');
+      let zkClient = plugin.readConfig('zookeeperDeployClient');
       assert.equal(zkClient.options.host, 'somehost');
       assert.equal(zkClient.options.port, 1234);
     });
 
     describe('resolving revisionKey from the pipeline', function() {
       it('uses the config data if it already exists', function() {
-        var plugin = subject.createDeployPlugin({
+        let plugin = subject.createDeployPlugin({
           name: 'zookeeper'
         });
 
-        var context = {
+        let context = {
           ui: mockUi,
           project: stubProject,
           config: {
@@ -116,16 +116,16 @@ describe('ember-cli-deploy-zookeeper', function() {
       });
 
       it('uses the commandOptions value if it exists', function() {
-        var plugin = subject.createDeployPlugin({
+        let plugin = subject.createDeployPlugin({
           name: 'zookeeper'
         });
 
-        var config = {
+        let config = {
           host: 'somehost',
           port: 1234
         };
 
-        var context = {
+        let context = {
           ui: mockUi,
           project: stubProject,
           config: {
@@ -146,16 +146,16 @@ describe('ember-cli-deploy-zookeeper', function() {
       });
 
       it('uses the context value if it exists and commandOptions doesn\'t', function() {
-        var plugin = subject.createDeployPlugin({
+        let plugin = subject.createDeployPlugin({
           name: 'zookeeper'
         });
 
-        var config = {
+        let config = {
           host: 'somehost',
           port: 1234
         };
 
-        var context = {
+        let context = {
           ui: mockUi,
           project: stubProject,
           config: {
@@ -175,7 +175,7 @@ describe('ember-cli-deploy-zookeeper', function() {
     });
 
     describe('without providing config', function () {
-      var config, plugin, context;
+      let config, plugin, context;
       beforeEach(function() {
         config = { };
         plugin = subject.createDeployPlugin({
@@ -191,7 +191,7 @@ describe('ember-cli-deploy-zookeeper', function() {
 
       it('warns about missing optional config', function() {
         plugin.configure(context);
-        var messages = mockUi.messages.reduce(function(previous, current) {
+        let messages = mockUi.messages.reduce(function(previous, current) {
           if (/- Missing config:\s.*, using default:\s/.test(current)) {
             previous.push(current);
           }
@@ -212,7 +212,7 @@ describe('ember-cli-deploy-zookeeper', function() {
     });
 
     describe('with a keyPrefix provided', function () {
-      var config, plugin, context;
+      let config, plugin, context;
       beforeEach(function() {
         config = {
           zookeeper: {
@@ -231,7 +231,7 @@ describe('ember-cli-deploy-zookeeper', function() {
       });
       it('warns about missing optional files, distDir, activationSuffix, revisionKey, didDeployMessage, and connection info', function() {
         plugin.configure(context);
-        var messages = mockUi.messages.reduce(function(previous, current) {
+        let messages = mockUi.messages.reduce(function(previous, current) {
           if (/- Missing config:\s.*, using default:\s/.test(current)) {
             previous.push(current);
           }
@@ -251,8 +251,8 @@ describe('ember-cli-deploy-zookeeper', function() {
   });
 
   describe('upload hook', function() {
-    var plugin;
-    var context;
+    let plugin;
+    let context;
 
     it('uploads the index', function() {
       plugin = subject.createDeployPlugin({
@@ -317,15 +317,15 @@ describe('ember-cli-deploy-zookeeper', function() {
 
   describe('activate hook', function() {
     it('activates revision', function() {
-      var activateCalled = false;
-      var activatePath = '';
-      var activateRevision = '';
+      let activateCalled = false;
+      let activatePath = '';
+      let activateRevision = '';
 
-      var plugin = subject.createDeployPlugin({
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
 
-      var context = {
+      let context = {
         ui: mockUi,
         project: stubProject,
         config: {
@@ -360,11 +360,11 @@ describe('ember-cli-deploy-zookeeper', function() {
     });
 
     it('rejects if an error is thrown when activating', function() {
-      var plugin = subject.createDeployPlugin({
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
 
-      var context = {
+      let context = {
         ui: mockUi,
         project: stubProject,
         config: {
@@ -394,8 +394,8 @@ describe('ember-cli-deploy-zookeeper', function() {
 
   describe('willActivate hook', function() {
     it('returns the current active version', function() {
-      var plugin;
-      var context;
+      let plugin;
+      let context;
 
       plugin = subject.createDeployPlugin({
         name: 'zookeeper'
@@ -437,12 +437,12 @@ describe('ember-cli-deploy-zookeeper', function() {
 
   describe('willDeploy hook', function() {
     it('prints a message for the validation of required zookeeper paths', function() {
-      var messageOutput = '';
-      var plugin = subject.createDeployPlugin({
+      let messageOutput = '';
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
 
-      var context = {
+      let context = {
         deployTarget: 'qa',
         ui: {
           write: function(message) {
@@ -470,15 +470,15 @@ describe('ember-cli-deploy-zookeeper', function() {
 
   describe('didDeploy hook', function() {
     it('prints default message about lack of activation when revision has not been activated', function() {
-      var messageOutput = '';
+      let messageOutput = '';
 
-      var plugin = subject.createDeployPlugin({
+      let plugin = subject.createDeployPlugin({
         name: 'zookeeper'
       });
       plugin.upload = function(){};
       plugin.activate = function(){};
 
-      var context = {
+      let context = {
         deployTarget: 'qa',
         ui: {
           write: function(message){
@@ -507,9 +507,9 @@ describe('ember-cli-deploy-zookeeper', function() {
   });
 
   describe('fetchRevisions hook', function() {
-    it('fills the revisions variable on context', function() {
-      var plugin;
-      var context;
+    it('fills the revisions letiable on context', function() {
+      let plugin;
+      let context;
 
       plugin = subject.createDeployPlugin({
         name: 'zookeeper'
@@ -553,7 +553,7 @@ describe('ember-cli-deploy-zookeeper', function() {
   });
 
   it('reads file contents properly', function() {
-    var result = subject.createDeployPlugin({
+    let result = subject.createDeployPlugin({
       name: 'test-plugin'
     });
 

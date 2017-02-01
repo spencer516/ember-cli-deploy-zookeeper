@@ -1,28 +1,48 @@
 'use strict';
-var ZookeeperProxy = require('../../../lib/zookeeper-proxy');
-var Promise = require('ember-cli/lib/ext/promise');
-var assert  = require('../../helpers/assert');
-var CoreObject = require('core-object');
+const ZookeeperProxy = require('../../../lib/zookeeper-proxy');
+const Promise = require('ember-cli/lib/ext/promise');
+const assert  = require('../../helpers/assert');
+const CoreObject = require('core-object');
 
-var ClientStub = CoreObject.extend({
-  init: function() {
+const ClientStub = CoreObject.extend({
+  init() {
+    this._callbacks = {};
     this._super();
   },
-  on: function() { },
-  connect: function(cb) { cb(); },
-  a_get: function(p, w, cb) { cb(0, null, null, 'get'); },
-  a_get_children: function(p, w, cb) { cb(0, null, ['getChildren']); },
-  a_exists: function(p, w, cb) { cb(0, null, null); },
-  a_delete_: function(p, v, cb) { cb(0, null); },
-  a_set: function(p, d, v, cb) { cb(0, null, 'set'); },
-  close: function() { return Promise.resolve('close'); },
-  a_create: function(p, d, f, cb) { cb(0, null, 'create'); }
+  on() { },
+  once(event, cb) {
+    this._callbacks[event] = cb;
+  },
+  connect() { 
+    this._callbacks.connected(); 
+  },
+  getData(p, cb) { cb(null, 'get', null); },
+  getChildren(p, cb) { cb(null, ['getChildren']); },
+  exists(p, cb) { cb(null, null); },
+  remove(p, v, cb) { cb(null); },
+  setData(p, d, cb) { cb(null, 'set'); },
+  close() { return Promise.resolve('close'); },
+  create(p, cb) { cb(null, p); }
 });
 
+const ClientFactoryStub = {
+  createClient(connectString, options) {
+    return new ClientStub(options);
+  },
+  extend(overrides) {
+    const ClientClass = ClientStub.extend(overrides);
+    return {
+      createClient(connectString, options) {
+        return new ClientClass(options);
+      }
+    }
+  }
+};
+
 describe('zookeeper proxy', function() {
-  var proxy;
+  let proxy;
   beforeEach(function() {
-    proxy = new ZookeeperProxy({}, ClientStub);
+    proxy = new ZookeeperProxy({}, ClientFactoryStub);
   });
 
   describe('#get', function() {
@@ -60,7 +80,21 @@ describe('zookeeper proxy', function() {
 
   describe('#create', function() {
     it('proxies', function() {
-      return assert.isFulfilled(proxy.create())
+      return assert.isFulfilled(proxy.create('create'))
+        .then(function(res) {
+          assert.equal(res, 'create');
+        });
+    });
+
+    it('proxies extra args with create with data', function() {
+      proxy = new ZookeeperProxy({}, ClientFactoryStub.extend({
+        create(p, d, cb) {
+          assert.ok(d instanceof Uint8Array);
+          assert.equal(d.toString('utf8'), 'data');
+          cb(null, p);
+        }
+      }));
+      return assert.isFulfilled(proxy.create('create', 'data'))
         .then(function(res) {
           assert.equal(res, 'create');
         });
@@ -69,19 +103,19 @@ describe('zookeeper proxy', function() {
 
   describe('#createIfNotExists', function() {
     it('creates paths if they do not already exist', function() {
-      var numberOfCreates = 0;
-      var numberOfExistChecks = 0;
-      proxy = new ZookeeperProxy({}, ClientStub.extend({
-        a_create: function(path, d, f, cb) {
+      let numberOfCreates = 0;
+      let numberOfExistChecks = 0;
+      proxy = new ZookeeperProxy({}, ClientFactoryStub.extend({
+        create(path, cb) {
           numberOfCreates++;
-          cb(0, null, 'create');
+          cb(null, path);
         },
-        a_exists: function(path, d, cb) {
+        exists(path, cb) {
           numberOfExistChecks++;
           if (numberOfCreates === 0) {
-            cb(0, null, null);
+            cb(null, null);
           } else {
-            cb(0, null, {});
+            cb(null, {});
           }
         }
       }));
@@ -104,17 +138,17 @@ describe('zookeeper proxy', function() {
     });
 
     it('does a create operation for empty paths and sets value if provided', function() {
-      var createdPath;
-      var setWasCalled = false;
+      let createdPath;
+      let setWasCalled = false;
 
-      proxy = new ZookeeperProxy({}, ClientStub.extend({
-        a_create: function(path, data, flags, cb) {
+      proxy = new ZookeeperProxy({}, ClientFactoryStub.extend({
+        create(path, cb) {
           createdPath = path;
-          cb(0, null, 'create');
+          cb(null, 'create');
         },
-        a_set: function(p, d, v, cb) {
+        setData(p, d, cb) {
           setWasCalled = true;
-          cb(0, null, 'set');
+          cb(null, 'set');
         }
       }));
 
@@ -126,11 +160,11 @@ describe('zookeeper proxy', function() {
     });
 
     it('does a create operation only once for a given path', function() {
-      var createdPath = 0;
-      proxy = new ZookeeperProxy({}, ClientStub.extend({
-        a_create: function(p, d, f, cb) {
+      let createdPath = 0;
+      proxy = new ZookeeperProxy({}, ClientFactoryStub.extend({
+        create(p, cb) {
           createdPath++;
-          cb(0, null, 'create');
+          cb(null, 'create');
         }
       }));
 
@@ -144,8 +178,8 @@ describe('zookeeper proxy', function() {
     });
 
     it('does not do a create operation if path exists', function() {
-      var createdPath = 0;
-      proxy = new ZookeeperProxy({}, ClientStub.extend({
+      let createdPath = 0;
+      proxy = new ZookeeperProxy({}, ClientFactoryStub.extend({
         a_exists: function(p, w, cb) {
           cb(0, null, {})
         },
